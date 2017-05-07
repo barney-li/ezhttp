@@ -17,6 +17,7 @@ end
 
 _M.say = function(self, msg, level)
 	if self.priorityMap[level] >= self.priority then print("[" .. level .. "] " .. msg) end
+	io.flush()
 end
 
 for k, _ in pairs(_M.priorityMap) do
