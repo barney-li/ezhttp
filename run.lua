@@ -1,0 +1,7 @@
+require("example")
+AsyncGetWaitOneExample()
+AsyncGetWaitAllExample()
+--SyncGetExample()
+-- local http1 = require("ezhttp"):new()
+-- local http2 = require("ezhttp"):new()
+-- local http3 = require("ezhttp"):new()

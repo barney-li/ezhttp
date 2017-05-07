@@ -21,10 +21,11 @@ _M.solve = function(host)
 	end)
 	uv.run('default')
 	uv.loop_close()
+	log:debug("solved addr: " .. json.encode(ret_res))
 	return ret_err, ret_res
 end
 
-_M.get = function(url)
+_M.get = function(self, url)
 	local u = neturl.parse(url)
 	log:debug(u.host)
 	log:debug(u.scheme)
@@ -36,6 +37,7 @@ _M.get = function(url)
 	if err then
 		return err, nil
 	end
+	log:debug(addr)
 	uv.tcp_connect(client, addr, u.port or u.services[u.scheme], function(err) 
 		assert(not err, err)
 		ret_err = err
