@@ -8,15 +8,16 @@ _M.priorityMap = {
 	fatal = 4
 }
 
-_M.new = function(self,level)
+_M.new = function(self, level, session)
 	local t = {}
 	t.priority = self.priorityMap[level]
+	t.session = session
 	setmetatable(t, {__index = _M})
 	return t
 end
 
 _M.say = function(self, msg, level)
-	if self.priorityMap[level] >= self.priority then print("[" .. level .. "] " .. msg) end
+	if self.priorityMap[level] >= self.priority then print("[" .. self.session .. "] [" .. level .. "] " .. msg) end
 	io.flush()
 end
 
