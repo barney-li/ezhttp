@@ -3,7 +3,7 @@ local neturl = require("neturl")
 local json = require("dkjson")
 
 function _M:new(session)
-	self.logger = require("log"):new("debug", session)
+	self.logger = require("log"):new("warn", session)
 	self.queue = {}
 	self.waitOneFlag = false
 	self.session = session
@@ -23,6 +23,7 @@ function _M:solve(host)
 		ret_res = res[1]["addr"]
 	end)
 	uv.run('default')
+	client:close()
 	uv.loop_close()
 	self.logger:debug("solved addr: " .. json.encode(ret_res))
 	return ret_err, ret_res
@@ -46,12 +47,10 @@ function _M:get(url)
 		ret_err = err
 		uv.read_start(client, function(err, chunk)
 			if chunk then
-				self.logger:debug("read data size: " .. string.len(chunk))
-				self.logger:debug(chunk)
-				ret_res = chunk
+				ret_res = ret_res + chunk
 			else
-				self.logger:debug("nothing to read, close connection")
-				uv.close(client)
+				self.logger:debug("read data size: " .. string.len(ret_res))
+				client:close()
 			end
 		end )
 		self.logger:debug("connected to " .. u.host .. " now sending HTTP request")
@@ -74,7 +73,7 @@ _M.post = function(url, payload)
 end
 
 function _M:getAsync(url)
-	table.insert(self.queue, {__status="pending", __stage="new", url = url, data="", err = nil})
+	table.insert(self.queue, {__status="pending", __stage="new", __client=nil, url = url, data="", err = nil})
 	local myQuePos = #(self.queue)
 	self.logger:debug("insert queue: " .. myQuePos)
 	local u = neturl.parse(url)
@@ -83,30 +82,24 @@ function _M:getAsync(url)
 	self.logger:debug(u.port or u.services[u.scheme])
 
 	self.uv.getaddrinfo(u.host, nil, nil, function(err, res)
-		self.logger:debug("queue len in solve cb: " .. #(self.queue))
 		if not err then
 			local addr = res[1]["addr"]
 			local client = self.uv.new_tcp()
+			self.queue[myQuePos].__client = client
 			self.uv.tcp_connect(client, addr, u.port or u.services[u.scheme], function(err)
-				self.logger:debug("queue len in connect cb: " .. #(self.queue))
 				if not err then
 					self.uv.read_start(client, function(err, chunk)
-						self.logger:debug("queue len in read cb: " .. #(self.queue))
-						self.logger:debug("myQuePos: " .. myQuePos)
-						if self.queue[myQuePos] == nil then
-							self.logger:error("-------------empty queue-----------")
-						end
 						if err then
 							self.logger:error(err)
 							self.queue[myQuePos] = {__status = "done", __stage = "on_read_start", data = nil, err = err}
 						else
 							if chunk then
-								self.logger:debug("read data length: " .. string.len(chunk))
+								
 								self.queue[myQuePos].__stage = "on_read_start"
 								self.queue[myQuePos].data = self.queue[myQuePos].data .. chunk
 							else
+								self.logger:debug("read data length of " .. myQuePos .. ": " .. string.len(self.queue[myQuePos].data))
 								self.queue[myQuePos].__status = "done"
-								self.uv.close(client)
 								self:__break()
 							end
 						end
@@ -140,21 +133,15 @@ function _M:postAsync()
 end
 
 function _M:waitAll()
-	self.uv.run('default')
-	--self.uv.stop()
+	local runRes = self.uv.run('default')
 	local queue = self.queue
-	self.logger:debug("clear queue")
 	self.queue = {}
 	return queue
 end
 
 function _M:waitOne()
 	self.waitOneFlag = true
-	self.uv.run('default')
-	local queue = self.queue
-	self.logger:debug("clear queue")
-	self.queue = {}
-	return queue
+	return self:waitAll()
 end
 
 function _M:waitAsync(self)
@@ -163,8 +150,10 @@ end
 
 function _M:__break()
 	if self.waitOneFlag then
-		self.logger:debug("break")
-		self.uv.stop()
+		for i,v in ipairs(self.queue) do
+			v.__client:close()
+		end
+		self.waitOneFlag = false
 	end
 end
 
