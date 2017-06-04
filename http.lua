@@ -1,12 +1,12 @@
 local _M = {}
 local neturl = require("neturl")
-local json = require("dkjson")
 
 function _M:new()
 	self.logger = require("log"):new("debug")
 	self.queue = {}
 	self.waitOneFlag = false
-	self.uv = require('luv')
+	print(debug.getinfo(2,'S').source)
+	self.uv = require("luv")
 	self.useProxy = false
 	local t = {}
 	setmetatable(t,self)
@@ -28,7 +28,6 @@ function _M:solve(host)
 		client:close()
 	end)
 	uv.run('default')
-	self.logger:debug("solved addr: " .. json.encode(ret_res))
 	return ret_err, ret_res
 end
 
