@@ -1,0 +1,42 @@
+function AsyncGetWaitOneExample()
+	local http = require("http"):new()
+	print("start async get")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/http.html")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/introduction.html")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/home.html")
+	print("async get finished")
+	res = http:waitOne()
+	for i,v in ipairs(res) do
+		print("--------------------")
+		print("res of request" .. i)
+		print("url: " .. v.url)
+		print("err: " .. (v.err or "nil"))
+		print("data len: " .. string.len(v.data or ""))
+	end
+end
+function AsyncGetWaitAllExample()
+	local http = require("http"):new()
+	print("start async get")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/http.html")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/introduction.html")
+	http:getAsync("http://w3.impa.br/~diego/software/luasocket/home.html")
+	print("async get finished")
+	res = http:waitAll()
+	for i,v in ipairs(res) do
+		print("--------------------")
+		print("res of request" .. i)
+		print("url: " .. v.url)
+		print("err: " .. (v.err or "nil"))
+		print("data len: " .. string.len(v.data or ""))
+	end
+end
+function SyncGetExample()
+	local http = require("http"):new()
+	print("start sync get")
+	local err, res = http:get("http://w3.impa.br/~diego/software/luasocket/http.html")
+	print("sync get finished")
+	print("--------------------")
+	print("res of sync get")
+	print("err: " .. (err or "nil"))
+	print("data len: " .. string.len(res or ""))
+end
