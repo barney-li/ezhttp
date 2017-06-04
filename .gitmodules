@@ -1,0 +1,6 @@
+[submodule "3rd/luv"]
+	path = 3rd/luv
+	url = git@github.com:luvit/luv.git
+[submodule "3rd/dkjson"]
+	path = 3rd/dkjson
+	url = git@github.com:LuaDist/dkjson.git
