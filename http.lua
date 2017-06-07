@@ -5,7 +5,6 @@ function _M:new()
 	self.logger = require("log"):new("debug")
 	self.queue = {}
 	self.waitOneFlag = false
-	print(debug.getinfo(2,'S').source)
 	self.uv = require("luv")
 	self.useProxy = false
 	local t = {}

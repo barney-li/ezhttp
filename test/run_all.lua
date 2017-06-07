@@ -1,5 +1,5 @@
 local http = require("http"):new()
-local json = require("3rd.dkjson.dkjson")
+local json = require("rapidjson")
 http.useProxy = true
 http:setProxy("192.168.0.103", 8888)
 print(json.encode({1,http.useProxy, http.proxy}))
